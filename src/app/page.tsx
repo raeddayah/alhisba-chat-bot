@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import LoginGate from "@/components/LoginGate";
-import Chat from "@/components/Chat";
+import ChatContainer from "@/components/chat/ChatContainer";
 
-const TOKEN_KEY = "alhisba_chat_token";
+const TOKEN_KEY = "alhisba_session";
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
@@ -28,5 +28,5 @@ export default function Page() {
 
   if (!ready) return null;
   if (!token) return <LoginGate onAuth={handleAuth} />;
-  return <Chat token={token} onLogout={handleLogout} />;
+  return <ChatContainer token={token} onLogout={handleLogout} />;
 }

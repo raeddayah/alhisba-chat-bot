@@ -1,113 +1,240 @@
-import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { NextRequest } from "next/server";
+import { streamText, convertToCoreMessages } from "ai";
+import { getLanguageModel } from "@/lib/getProvider";
+import { getModel, DEFAULT_MODEL_ID } from "@/lib/models";
+import { z } from "zod";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { sanitizeMessage, sanitizeHistory } from "@/lib/sanitize";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const MCP_URL = "https://mcp.alhisba.com/mcp";
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant for Alhisba, a Saudi real estate platform.
-You have access to real estate tools via the Alhisba MCP server.
-Answer questions clearly and concisely. When you retrieve data, present it in a well-structured, readable format.
-Use tables for comparisons, bullet points for lists, and clear headings where helpful.
-Respond in the same language the user writes in (Arabic or English).`;
+const SYSTEM_PROMPT = `You are an AI assistant for Alhisba, a Kuwait real estate platform.
+
+Rules:
+1. Call MCP tools to fetch real data first.
+2. Then call a render tool to display it visually (never paste raw JSON).
+3. renderStatGrid=KPIs/summaries, renderPropertyCard=single property, renderTable=lists, renderChart=trends, renderComparison=compare 2-4 items.
+4. Never invent data.
+5. Reply in the same language as the user (Arabic or English).`;
 
 function getIP(req: NextRequest): string {
   return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
     "unknown"
   );
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    // Auth gate
-    const sessionToken = req.headers.get("x-session-token");
-    if (!sessionToken || sessionToken !== process.env.CHAT_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+/** Connect to the MCP server and return AI SDK-compatible tools */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getMcpTools(client: Client): Promise<Record<string, any>> {
+  const { tools } = await client.listTools();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aiTools: Record<string, any> = {};
 
-    // Rate limit
-    const ip = getIP(req);
-    const { ok, remaining } = checkRateLimit(ip);
-    if (!ok) {
-      return NextResponse.json(
-        { error: "Too many requests. Please wait a minute." },
-        { status: 429, headers: { "X-RateLimit-Remaining": "0" } }
-      );
-    }
+  for (const t of tools) {
+    // Build a zod schema from the JSON Schema inputSchema
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inputSchema = (t.inputSchema as any) ?? {};
+    const props = inputSchema.properties ?? {};
 
-    const body = await req.json();
-    const message = sanitizeMessage(body.message);
-    const history = sanitizeHistory(body.history);
-
-    const messages: Anthropic.MessageParam[] = [
-      ...history,
-      { role: "user", content: message },
-    ];
-
-    const response = await client.beta.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages,
-      mcp_servers: [
-        {
-          type: "url",
-          url: "https://mcp.alhisba.com/mcp",
-          name: "alhisba",
-        },
-      ],
-      betas: ["mcp-client-2025-04-04"],
-      stream: false,
-    } as Parameters<typeof client.beta.messages.create>[0]);
-
-    if (!("content" in response)) {
-      throw new Error("Unexpected streaming response");
-    }
-
-    // Extract text and tool activity from response
-    let text = "";
-    const toolActivity: Array<{ tool: string; input: unknown; output?: string }> = [];
-
-    type AnyBlock = { type: string; text?: string; name?: string; input?: unknown; content?: Array<{ type: string; text?: string }> };
-    const blocks = (response as { content: AnyBlock[] }).content;
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      if (block.type === "text") {
-        text += block.text ?? "";
-      } else if (block.type === "mcp_tool_use") {
-        const activity: { tool: string; input: unknown; output?: string } = {
-          tool: block.name ?? "unknown",
-          input: block.input,
-        };
-        // Look for matching result block
-        const next = blocks[i + 1];
-        if (next && next.type === "mcp_tool_result") {
-          activity.output = next.content
-            ?.filter((c) => c.type === "text")
-            .map((c) => c.text)
-            .join("\n");
-          i++; // skip the result block
-        }
-        toolActivity.push(activity);
+    // Convert each property to a zod type (best-effort)
+    const zodProps: Record<string, z.ZodTypeAny> = {};
+    for (const [key, val] of Object.entries(props as Record<string, { type?: string; description?: string; enum?: string[]; default?: unknown }>)) {
+      let zodType: z.ZodTypeAny;
+      if (val.enum) {
+        zodType = z.enum(val.enum as [string, ...string[]]);
+      } else if (val.type === "number" || val.type === "integer") {
+        zodType = z.number();
+      } else if (val.type === "boolean") {
+        zodType = z.boolean();
+      } else if (val.type === "array") {
+        zodType = z.array(z.unknown());
+      } else if (val.type === "object") {
+        zodType = z.record(z.unknown());
+      } else {
+        zodType = z.string();
       }
+
+      const required: string[] = inputSchema.required ?? [];
+      if (!required.includes(key)) zodType = zodType.optional();
+      // Skip per-param descriptions to reduce token count
+      zodProps[key] = zodType;
     }
 
-    return NextResponse.json(
-      { text, toolActivity },
-      { headers: { "X-RateLimit-Remaining": String(remaining) } }
+    const schema = z.object(zodProps);
+
+    const toolName = t.name;
+    // Truncate description to 80 chars to save tokens across 23 tools
+    const toolDesc = (t.description ?? t.name).slice(0, 80);
+    aiTools[toolName] = {
+      description: toolDesc,
+      parameters: schema,
+      execute: async (args: Record<string, unknown>) => {
+        const result = await client.callTool({ name: toolName, arguments: args });
+        const content = result.content as Array<{ type: string; text?: string }>;
+        return content.filter((c) => c.type === "text").map((c) => c.text).join("\n");
+      },
+    };
+  }
+
+  return aiTools;
+}
+
+export async function POST(req: NextRequest) {
+  // Auth
+  const token = req.headers.get("x-session-token");
+  if (!token || token !== process.env.CHAT_PASSWORD) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
+  // Rate limit
+  const { ok } = checkRateLimit(getIP(req));
+  if (!ok) {
+    return new Response(JSON.stringify({ error: "Too many requests. Wait a minute." }), { status: 429 });
+  }
+
+  let body: { messages?: unknown[]; modelId?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 });
+  }
+
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    return new Response(JSON.stringify({ error: "No messages provided" }), { status: 400 });
+  }
+
+  const modelId = typeof body.modelId === "string" ? body.modelId : DEFAULT_MODEL_ID;
+  const modelMeta = getModel(modelId);
+
+  // Check that the required API key exists for this provider
+  const apiKey = process.env[modelMeta.envKey];
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: `No API key configured for ${modelMeta.provider}. Add ${modelMeta.envKey} to .env.local.` }),
+      { status: 400 }
     );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawMessages = (body.messages as any[]).slice(-40);
+
+  let coreMessages;
+  try {
+    coreMessages = convertToCoreMessages(rawMessages);
+  } catch {
+    coreMessages = rawMessages
+      .filter((m: { role: string }) => m.role === "user" || m.role === "assistant")
+      .map((m: { role: string; content: string }) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content ?? "",
+      }));
+  }
+
+  // Connect to MCP via streamable-http
+  const mcpClient = new Client({ name: "alhisba-chat", version: "1.0.0" });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mcpTools: Record<string, any> = {};
+
+  try {
+    const transport = new StreamableHTTPClientTransport(new URL(MCP_URL));
+    await mcpClient.connect(transport);
+    mcpTools = await getMcpTools(mcpClient);
+    console.log(`[MCP] Connected. Tools loaded: ${Object.keys(mcpTools).join(", ")}`);
   } catch (err) {
-    console.error("Chat API error:", err);
-    const message =
-      err instanceof Error && err.message.includes("max")
-        ? err.message
-        : "Something went wrong. Please try again.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[MCP] Connection failed:", err);
+  }
+
+  // Render tools — no execute, client-side only
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderTools: Record<string, any> = {
+    renderChart: {
+      description: "Render a chart. Use for trends, distributions, comparisons over time.",
+      parameters: z.object({
+        title: z.string(),
+        type: z.enum(["bar", "line", "pie", "area"]),
+        data: z.array(z.record(z.unknown())),
+        xKey: z.string(),
+        yKey: z.string(),
+        description: z.string().optional(),
+      }),
+    },
+    renderTable: {
+      description: "Render a sortable table. Use for dense lists or many columns.",
+      parameters: z.object({
+        title: z.string(),
+        columns: z.array(z.object({ key: z.string(), label: z.string(), numeric: z.boolean().optional() })),
+        rows: z.array(z.record(z.unknown())),
+        description: z.string().optional(),
+      }),
+    },
+    renderPropertyCard: {
+      description: "Render a property card. Call once per property.",
+      parameters: z.object({
+        title: z.string(),
+        price: z.string(),
+        location: z.string(),
+        type: z.string(),
+        specs: z.array(z.string()),
+        badges: z.array(z.string()).optional(),
+        description: z.string().optional(),
+        url: z.string().optional(),
+      }),
+    },
+    renderStatGrid: {
+      description: "Render KPI stats grid. Use for market summaries and numeric highlights.",
+      parameters: z.object({
+        title: z.string().optional(),
+        stats: z.array(z.object({
+          label: z.string(),
+          value: z.string(),
+          change: z.string().optional(),
+          trend: z.enum(["up", "down", "neutral"]).optional(),
+          unit: z.string().optional(),
+        })),
+      }),
+    },
+    renderComparison: {
+      description: "Render side-by-side comparison. Use when comparing 2-4 options.",
+      parameters: z.object({
+        title: z.string().optional(),
+        items: z.array(z.object({
+          title: z.string(),
+          highlight: z.string().optional(),
+          specs: z.array(z.object({ label: z.string(), value: z.string() })),
+          badge: z.string().optional(),
+        })),
+      }),
+    },
+  };
+
+  try {
+    const result = streamText({
+      model: getLanguageModel(modelId),
+      system: SYSTEM_PROMPT,
+      messages: coreMessages,
+      tools: { ...mcpTools, ...renderTools },
+      maxSteps: 10,
+      onFinish: async () => {
+        try { await mcpClient.close(); } catch { /* ignore */ }
+      },
+    });
+
+    return result.toDataStreamResponse({
+      getErrorMessage: (err) => {
+        console.error("[stream error]", err);
+        return err instanceof Error ? err.message : String(err);
+      },
+    });
+  } catch (err) {
+    console.error("[streamText] error:", err);
+    await mcpClient.close().catch(() => {});
+    return new Response(JSON.stringify({ error: "Failed to process request" }), { status: 500 });
   }
 }
 
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204 });
+  return new Response(null, { status: 204 });
 }

@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Alhisba Chat",
-  description: "AI-powered assistant",
+  description: "AI-powered real estate assistant",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

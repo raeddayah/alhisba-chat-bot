@@ -1,70 +1,90 @@
 # Alhisba Chat
 
-A Claude-style chat interface that connects to the Alhisba MCP server for real estate data.
+Claude-style chat with **Generative UI** — the model renders interactive React components
+(charts, tables, property cards, KPI grids) directly into the chat based on live data from
+the Alhisba MCP server.
 
 ## Setup
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+cd alhisba-chat
+npm install
+cp .env.example .env.local   # then edit .env.local
+npm run dev
+# → http://localhost:3000
+```
 
-2. **Create environment file**
-   ```bash
-   cp .env.example .env.local
-   ```
-   Then edit `.env.local` with your values:
-   - `ANTHROPIC_API_KEY` — your Anthropic API key
-   - `CHAT_PASSWORD` — a strong password users must enter to access the chat
-   - `ALLOWED_ORIGIN` — your production domain (e.g. `https://chat.alhisba.com`)
+### Environment variables (`.env.local`)
 
-3. **Run development server**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000)
-
-4. **Build for production**
-   ```bash
-   npm run build
-   npm start
-   ```
+| Variable | Description |
+|---|---|
+| `ANTHROPIC_API_KEY` | Your Anthropic API key — **never** reaches the client |
+| `CHAT_PASSWORD` | Password users must enter before the chat loads |
+| `ALLOWED_ORIGIN` | Your production domain for CORS (e.g. `https://chat.alhisba.com`) |
 
 ## Architecture
 
 ```
 src/
   app/
-    page.tsx              # Root page — login gate or chat
-    layout.tsx            # HTML shell
-    globals.css           # Tailwind + prose styles
+    page.tsx                  # Login gate → chat
+    layout.tsx
+    globals.css
     api/
-      auth/route.ts       # Password auth endpoint
-      chat/route.ts       # Claude + MCP proxy (API key never leaves server)
+      auth/route.ts           # Password verification
+      chat/route.ts           # streamText + MCP + render tool definitions
   components/
-    LoginGate.tsx         # Password screen
-    Chat.tsx              # Main chat container
-    ChatMessage.tsx       # Message bubble with markdown rendering
-    ChatInput.tsx         # Auto-resize textarea
-    TypingIndicator.tsx   # Animated dots
-    ToolActivity.tsx      # Collapsible MCP tool call log
+    LoginGate.tsx             # Password screen
+    render/
+      ChartCard.tsx           # recharts bar/line/area/pie
+      TableCard.tsx           # sortable table with sticky header
+      PropertyCard.tsx        # real-estate card with expandable details
+      StatGrid.tsx            # KPI grid with trend indicators
+      ComparisonCard.tsx      # side-by-side comparison
+    chat/
+      ChatContainer.tsx       # useChat hook, auto-scroll, suggestions
+      ChatMessage.tsx         # renders text + tool invocations as components
+      ChatInput.tsx           # auto-resize textarea
+      ToolActivity.tsx        # collapsible MCP tool call log
+      TypingShimmer.tsx       # animated dots while streaming
   lib/
-    rateLimit.ts          # In-memory rate limiter (20 req/min per IP)
-    sanitize.ts           # Input validation helpers
+    cn.ts                     # clsx + tailwind-merge utility
+    rateLimit.ts              # 50 req/min per IP
+    sanitize.ts               # input validation, 4000-char cap
 ```
+
+## How Generative UI works
+
+```
+User message
+  └─▶ /api/chat (streamText)
+        ├─ MCP tools (server-executed) → fetch live Alhisba data
+        └─ render* tools (client-side) → model calls with data
+              └─▶ useChat streams tool invocations to browser
+                    └─▶ ChatMessage renders React component
+```
+
+The model fetches data from the MCP server, then decides which render tool to call:
+
+| Data type | Tool called | Component |
+|---|---|---|
+| Trends / time-series | `renderChart` | `ChartCard` |
+| Dense lists / many columns | `renderTable` | `TableCard` |
+| Single property | `renderPropertyCard` | `PropertyCard` |
+| KPIs / statistics | `renderStatGrid` | `StatGrid` |
+| Comparing 2–4 options | `renderComparison` | `ComparisonCard` |
+
+## Adding a new render component
+
+1. Create `src/components/render/YourCard.tsx`
+2. Add the tool definition in `src/app/api/chat/route.ts` (inside `tools: { ... }`) with a Zod schema — **no `execute` function** (client-side tool)
+3. Add the case in `src/components/chat/ChatMessage.tsx` inside `ToolResult`
+4. Update the system prompt in `route.ts` to tell the model when to use it
 
 ## Security
 
-- API key is server-only (`ANTHROPIC_API_KEY` in `.env.local`, never sent to browser)
-- All Claude/MCP calls go through `/api/chat` — frontend has no direct API access
-- Password gate required before chat is usable
-- Rate limiting: 20 requests/minute per IP
-- Input sanitized and capped at 4000 characters
-- CORS headers restrict API to `ALLOWED_ORIGIN`
-- Errors never expose internal details or stack traces
-
-## MCP Server
-
-Connected to `https://mcp.alhisba.com/mcp` on every request. Tool calls are surfaced
-in a collapsible "N tools called" section below each assistant message.
-# alhisba-chat-bot
+- API key is server-only — never in the client bundle
+- Password gate backed by `CHAT_PASSWORD` env var
+- Rate limiting: 50 req/min per IP (in-memory)
+- Input sanitized and capped at 4000 chars
+- Errors never expose keys or stack traces
