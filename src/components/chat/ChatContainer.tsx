@@ -8,6 +8,7 @@ import TypingShimmer from "./TypingShimmer";
 import ModelSelector from "@/components/ModelSelector";
 import { DEFAULT_MODEL_ID, MODELS } from "@/lib/models";
 import { cn } from "@/lib/cn";
+import { ChatContext } from "@/lib/ChatContext";
 
 const SUGGESTIONS = [
   "ما هي العقارات المتاحة للبيع؟",
@@ -65,6 +66,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
   const isEmpty = messages.length === 0;
 
   return (
+    <ChatContext.Provider value={{ ask: (msg) => { append({ role: "user", content: msg }); bottomRef.current?.scrollIntoView({ behavior: "smooth" }); } }}>
     <div className="flex flex-col h-screen max-w-3xl mx-auto">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0 shadow-sm">
@@ -168,5 +170,6 @@ export default function ChatContainer({ token, onLogout }: Props) {
         </p>
       </div>
     </div>
+    </ChatContext.Provider>
   );
 }

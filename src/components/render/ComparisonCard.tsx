@@ -1,6 +1,8 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useChatContext } from "@/lib/ChatContext";
 
 interface Item {
   title: string;
@@ -21,11 +23,15 @@ const BADGE_STYLES: Record<string, string> = {
 };
 
 export default function ComparisonCard({ title, items }: Props) {
+  const { ask } = useChatContext();
   const cols = items.length === 2 ? "grid-cols-2" :
                items.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4";
 
-  // Collect all unique spec labels for aligned rows
   const allLabels = Array.from(new Set(items.flatMap((it) => it.specs.map((s) => s.label))));
+
+  function itemSummary(item: Item) {
+    return item.specs.map((s) => `${s.label}: ${s.value}`).join("، ");
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm my-3 overflow-hidden">
@@ -37,11 +43,18 @@ export default function ComparisonCard({ title, items }: Props) {
 
       <div className={cn("grid divide-x divide-gray-100", cols)}>
         {items.map((item, i) => (
-          <div key={i} className="flex flex-col">
+          <button
+            key={i}
+            onClick={() => ask(`أخبرني بمزيد من التفاصيل والتحليل عن: "${item.title}"${item.highlight ? ` (${item.highlight})` : ""}. البيانات المتاحة: ${itemSummary(item)}. ما مزايا وعيوب هذا الخيار؟`)}
+            className={cn(
+              "flex flex-col text-right group transition-colors",
+              "hover:bg-blue-50 cursor-pointer"
+            )}
+          >
             {/* Card header */}
             <div className={cn(
-              "px-3 py-3 border-b border-gray-100",
-              i === 0 && "bg-blue-50"
+              "px-3 py-3 border-b border-gray-100 w-full",
+              i === 0 && "bg-blue-50 group-hover:bg-blue-100"
             )}>
               {item.badge && (
                 <span className={cn(
@@ -55,10 +68,14 @@ export default function ComparisonCard({ title, items }: Props) {
               {item.highlight && (
                 <div className="text-base font-bold text-blue-700 mt-1">{item.highlight}</div>
               )}
+              <div className="flex items-center gap-1 mt-1.5 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MessageCircle className="w-3 h-3" />
+                <span>اسأل للمزيد</span>
+              </div>
             </div>
 
             {/* Aligned spec rows */}
-            <div className="flex-1 divide-y divide-gray-50">
+            <div className="flex-1 divide-y divide-gray-50 w-full">
               {allLabels.map((label) => {
                 const spec = item.specs.find((s) => s.label === label);
                 return (
@@ -71,7 +88,7 @@ export default function ComparisonCard({ title, items }: Props) {
                 );
               })}
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

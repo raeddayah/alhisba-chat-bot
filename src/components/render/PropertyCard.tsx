@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp, ExternalLink, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useChatContext } from "@/lib/ChatContext";
 
 interface Props {
   title: string;
@@ -32,6 +33,7 @@ function badgeColor(label: string) {
 
 export default function PropertyCard({ title, price, location, type, specs, badges, description, url }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const { ask } = useChatContext();
 
   return (
     <div className={cn(
@@ -80,7 +82,7 @@ export default function PropertyCard({ title, price, location, type, specs, badg
             onClick={() => setExpanded((e) => !e)}
             className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <span>{expanded ? "Hide details" : "Show details"}</span>
+            <span>{expanded ? "إخفاء التفاصيل" : "عرض التفاصيل"}</span>
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           {expanded && (
@@ -91,18 +93,27 @@ export default function PropertyCard({ title, price, location, type, specs, badg
         </>
       )}
 
-      {/* CTA */}
-      {url && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors"
+      {/* Actions */}
+      <div className="flex border-t border-gray-100">
+        <button
+          onClick={() => ask(`أخبرني بمزيد من التفاصيل عن هذا العقار: "${title}" في ${location} بسعر ${price}. اذكر المزايا والعيوب ومدى ملاءمته للاستثمار.`)}
+          className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-blue-600 font-medium hover:bg-blue-50 transition-colors"
         >
-          <ExternalLink className="w-3 h-3" />
-          View Property
-        </a>
-      )}
+          <MessageCircle className="w-3.5 h-3.5" />
+          اسأل عن هذا العقار
+        </button>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            عرض
+          </a>
+        )}
+      </div>
     </div>
   );
 }

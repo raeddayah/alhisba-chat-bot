@@ -9,6 +9,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { cn } from "@/lib/cn";
+import { useChatContext } from "@/lib/ChatContext";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
@@ -21,17 +22,37 @@ interface Props {
   description?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ChartPayload = { activePayload?: { payload: Record<string, unknown> }[]; activeLabel?: any };
+
 export default function ChartCard({ title, type, data, xKey, yKey, description }: Props) {
+  const { ask } = useChatContext();
   const commonProps = { data, margin: { top: 4, right: 16, left: 0, bottom: 4 } };
   const axisProps = { style: { fontSize: 11 } };
 
+  function handleChartClick(payload: ChartPayload) {
+    if (!payload?.activePayload?.length) return;
+    const point = payload.activePayload[0].payload;
+    const label = point[xKey];
+    const value = point[yKey];
+    ask(`أخبرني بمزيد من التفاصيل والتحليل عن نقطة البيانات هذه من الرسم البياني "${title}": ${xKey}=${label}، ${yKey}=${value}. ما الأسباب والسياق والتوقعات؟`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handlePieClick(entry: any) {
+    const label = entry[xKey] ?? entry.name;
+    const value = entry[yKey] ?? entry.value;
+    ask(`أخبرني بمزيد من التفاصيل والتحليل عن هذا القطاع من الرسم البياني "${title}": ${label} = ${value}. ما الأسباب والسياق؟`);
+  }
+
   return (
     <div className={cn("bg-white border border-gray-200 rounded-2xl p-4 shadow-sm my-3 w-full")}>
-      <h3 className="text-sm font-semibold text-gray-800 mb-3">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-800 mb-1">{title}</h3>
+      <p className="text-xs text-gray-400 mb-3">انقر على أي نقطة للاستفسار عنها</p>
 
       <ResponsiveContainer width="100%" height={220}>
         {type === "bar" ? (
-          <BarChart {...commonProps}>
+          <BarChart {...commonProps} onClick={handleChartClick} style={{ cursor: "pointer" }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey={xKey} tick={axisProps} />
             <YAxis tick={axisProps} />
@@ -40,16 +61,16 @@ export default function ChartCard({ title, type, data, xKey, yKey, description }
             <Bar dataKey={yKey} fill={COLORS[0]} radius={[4, 4, 0, 0]} isAnimationActive />
           </BarChart>
         ) : type === "line" ? (
-          <LineChart {...commonProps}>
+          <LineChart {...commonProps} onClick={handleChartClick} style={{ cursor: "pointer" }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey={xKey} tick={axisProps} />
             <YAxis tick={axisProps} />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey={yKey} stroke={COLORS[0]} strokeWidth={2} dot={{ r: 3 }} isAnimationActive />
+            <Line type="monotone" dataKey={yKey} stroke={COLORS[0]} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6, style: { cursor: "pointer" } }} isAnimationActive />
           </LineChart>
         ) : type === "area" ? (
-          <AreaChart {...commonProps}>
+          <AreaChart {...commonProps} onClick={handleChartClick} style={{ cursor: "pointer" }}>
             <defs>
               <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={COLORS[0]} stopOpacity={0.15} />
@@ -75,6 +96,8 @@ export default function ChartCard({ title, type, data, xKey, yKey, description }
               isAnimationActive
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               labelLine={false}
+              onClick={handlePieClick}
+              style={{ cursor: "pointer" }}
             >
               {data.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />

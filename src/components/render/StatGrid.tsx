@@ -1,7 +1,8 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useChatContext } from "@/lib/ChatContext";
 
 interface Stat {
   label: string;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function StatGrid({ title, stats }: Props) {
+  const { ask } = useChatContext();
   const cols = stats.length <= 2 ? "grid-cols-2" :
                stats.length === 3 ? "grid-cols-3" :
                "grid-cols-2 sm:grid-cols-4";
@@ -30,7 +32,11 @@ export default function StatGrid({ title, stats }: Props) {
       )}
       <div className={cn("grid gap-px bg-gray-100", cols)}>
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white px-4 py-4">
+          <button
+            key={i}
+            onClick={() => ask(`أخبرني بمزيد من التفاصيل والتحليل عن: "${stat.label}" (القيمة الحالية: ${stat.value}${stat.unit ? " " + stat.unit : ""}${stat.change ? "، التغيير: " + stat.change : ""}). ما السياق والأسباب والتوقعات المستقبلية؟`)}
+            className="bg-white px-4 py-4 text-right hover:bg-blue-50 transition-colors group cursor-pointer"
+          >
             <p className="text-xs text-gray-500 mb-1 leading-tight">{stat.label}</p>
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-bold text-gray-900 tabular-nums">
@@ -54,7 +60,11 @@ export default function StatGrid({ title, stats }: Props) {
                 {stat.change}
               </div>
             )}
-          </div>
+            <div className="flex items-center gap-1 mt-2 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+              <MessageCircle className="w-3 h-3" />
+              <span>اسأل للمزيد</span>
+            </div>
+          </button>
         ))}
       </div>
     </div>
