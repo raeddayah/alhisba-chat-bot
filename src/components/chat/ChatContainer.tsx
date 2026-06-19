@@ -28,7 +28,6 @@ export default function ChatContainer({ token, onLogout }: Props) {
   const [modelId, setModelId] = useState(DEFAULT_MODEL_ID);
   const [missingKeys, setMissingKeys] = useState<string[]>([]);
 
-  // Fetch which providers have API keys configured
   useEffect(() => {
     fetch("/api/models")
       .then((r) => r.json())
@@ -69,15 +68,13 @@ export default function ChatContainer({ token, onLogout }: Props) {
     <ChatContext.Provider value={{ ask: (msg) => { append({ role: "user", content: msg }); bottomRef.current?.scrollIntoView({ behavior: "smooth" }); } }}>
     <div className="flex flex-col h-screen max-w-3xl mx-auto">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0 shadow-sm">
+      <header className="chat-header flex items-center justify-between px-4 py-3 shrink-0 shadow-sm">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-            A
-          </div>
+          <div className="avatar-ai w-8 h-8 rounded-full text-sm">A</div>
           <div>
             <div className="text-sm font-semibold text-gray-900">Alhisba Assistant</div>
-            <div className="flex items-center gap-1 text-xs text-green-500">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-1 text-xs status-online">
+              <span className="status-dot w-1.5 h-1.5 animate-pulse" />
               Online · MCP connected
             </div>
           </div>
@@ -91,7 +88,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
           />
           <button
             onClick={onLogout}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+            className="btn-ghost text-xs px-2 py-1"
           >
             تسجيل الخروج
           </button>
@@ -100,7 +97,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
 
       {/* Model warning (no tool support) */}
       {selectedMeta && !selectedMeta.supportsTools && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-700 flex items-center gap-2">
+        <div className="warning-banner px-4 py-2 text-xs flex items-center gap-2">
           <span>⚠️</span>
           <span>
             <strong>{selectedMeta.label}</strong> لا يدعم استخدام الأدوات — سيتم تعطيل جلب البيانات عبر MCP لهذا النموذج.
@@ -112,7 +109,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
       <main className="flex-1 overflow-y-auto px-4 py-6">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 text-center px-4">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+            <div className="avatar-ai w-16 h-16 rounded-full shadow-lg">
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -129,10 +126,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className={cn(
-                    "text-left text-xs bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700",
-                    "hover:border-blue-300 hover:bg-blue-50 transition-all"
-                  )}
+                  className={cn("suggestion-btn text-left text-xs px-3 py-2.5")}
                 >
                   {s}
                 </button>
@@ -149,7 +143,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
         )}
 
         {error && (
-          <div className="mx-auto max-w-sm bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-600 text-center mt-2">
+          <div className="error-bubble mx-auto max-w-sm px-3 py-2 text-xs text-center mt-2">
             {error.message || "Something went wrong. Please try again."}
           </div>
         )}
@@ -158,7 +152,7 @@ export default function ChatContainer({ token, onLogout }: Props) {
       </main>
 
       {/* Input */}
-      <div className="px-4 pb-4 pt-2 shrink-0 bg-gray-50 border-t border-gray-100">
+      <div className="input-area px-4 pb-4 pt-2 shrink-0">
         <ChatInput
           value={input}
           onChange={setInput}

@@ -16,10 +16,11 @@ interface Props {
   items: Item[];
 }
 
+// Badge color class — mirrors badge-* classes in globals.css
 const BADGE_STYLES: Record<string, string> = {
-  "Best Value": "bg-green-100 text-green-700 border-green-200",
-  "Recommended": "bg-blue-100 text-blue-700 border-blue-200",
-  "Premium": "bg-purple-100 text-purple-700 border-purple-200",
+  "Best Value":  "badge-green",
+  "Recommended": "badge-blue",
+  "Premium":     "badge-purple",
 };
 
 export default function ComparisonCard({ title, items }: Props) {
@@ -34,10 +35,10 @@ export default function ComparisonCard({ title, items }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm my-3 overflow-hidden">
+    <div className="card">
       {title && (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        <div className="card-header">
+          <h3 className="card-title">{title}</h3>
         </div>
       )}
 
@@ -46,29 +47,20 @@ export default function ComparisonCard({ title, items }: Props) {
           <button
             key={i}
             onClick={() => ask(`أخبرني بمزيد من التفاصيل والتحليل عن: "${item.title}"${item.highlight ? ` (${item.highlight})` : ""}. البيانات المتاحة: ${itemSummary(item)}. ما مزايا وعيوب هذا الخيار؟`)}
-            className={cn(
-              "flex flex-col text-right group transition-colors",
-              "hover:bg-blue-50 cursor-pointer"
-            )}
+            className="comparison-item flex flex-col text-right group"
           >
             {/* Card header */}
-            <div className={cn(
-              "px-3 py-3 border-b border-gray-100 w-full",
-              i === 0 && "bg-blue-50 group-hover:bg-blue-100"
-            )}>
+            <div className={cn("comparison-item-header px-3 py-3 w-full", i === 0 && "featured")}>
               {item.badge && (
-                <span className={cn(
-                  "text-xs px-2 py-0.5 rounded-full border font-medium mb-1.5 inline-block",
-                  BADGE_STYLES[item.badge] ?? "bg-gray-100 text-gray-600 border-gray-200"
-                )}>
+                <span className={cn("badge mb-1.5", BADGE_STYLES[item.badge] ?? "badge-gray")}>
                   {item.badge}
                 </span>
               )}
               <h4 className="text-xs font-semibold text-gray-900 leading-tight">{item.title}</h4>
               {item.highlight && (
-                <div className="text-base font-bold text-blue-700 mt-1">{item.highlight}</div>
+                <div className="comparison-highlight mt-1">{item.highlight}</div>
               )}
-              <div className="flex items-center gap-1 mt-1.5 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="ask-hint flex items-center gap-1 mt-1.5 text-xs">
                 <MessageCircle className="w-3 h-3" />
                 <span>اسأل للمزيد</span>
               </div>

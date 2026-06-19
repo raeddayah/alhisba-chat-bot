@@ -2,7 +2,6 @@
 
 import { useRef, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 interface Props {
   value: string;
@@ -29,10 +28,7 @@ export default function ChatInput({ value, onChange, onSend, disabled }: Props) 
   }
 
   return (
-    <div className={cn(
-      "flex items-end gap-2 bg-white border border-gray-300 rounded-2xl px-4 py-3 shadow-sm transition-all",
-      "focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100"
-    )}>
+    <div className="input-box flex items-end gap-2 px-4 py-3">
       <textarea
         ref={ref}
         value={value}
@@ -47,10 +43,7 @@ export default function ChatInput({ value, onChange, onSend, disabled }: Props) 
       <button
         onClick={onSend}
         disabled={disabled || !value.trim()}
-        className={cn(
-          "shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all",
-          "bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-        )}
+        className="btn-send shrink-0 w-8 h-8 flex items-center justify-center"
         aria-label="Send"
       >
         <ArrowUp className="w-4 h-4 text-white" />

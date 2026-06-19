@@ -23,7 +23,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="absolute top-2 right-2 p-1 rounded bg-gray-700/80 hover:bg-gray-600 text-gray-300 transition-colors"
+      className="code-copy-btn absolute top-2 right-2 p-1"
       aria-label="Copy code"
     >
       {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
@@ -34,18 +34,12 @@ function CopyButton({ text }: { text: string }) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ToolResult({ toolName, args }: { toolName: string; args: any }) {
   switch (toolName) {
-    case "renderChart":
-      return <ChartCard {...args} />;
-    case "renderTable":
-      return <TableCard {...args} />;
-    case "renderPropertyCard":
-      return <PropertyCard {...args} />;
-    case "renderStatGrid":
-      return <StatGrid {...args} />;
-    case "renderComparison":
-      return <ComparisonCard {...args} />;
-    default:
-      return null;
+    case "renderChart":        return <ChartCard {...args} />;
+    case "renderTable":        return <TableCard {...args} />;
+    case "renderPropertyCard": return <PropertyCard {...args} />;
+    case "renderStatGrid":     return <StatGrid {...args} />;
+    case "renderComparison":   return <ComparisonCard {...args} />;
+    default:                   return null;
   }
 }
 
@@ -61,21 +55,20 @@ export default function ChatMessage({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 items-start`}>
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 mr-2">
-          A
-        </div>
+        <div className="avatar-ai w-7 h-7 rounded-full text-xs shrink-0 mt-0.5 mr-2">A</div>
       )}
 
       <div className={`max-w-[85%] ${isUser ? "order-1" : ""}`}>
-        {/* Text bubble */}
+        {/* User text bubble */}
         {isUser && hasText && (
-          <div className="bg-blue-600 text-white rounded-2xl rounded-br-sm px-4 py-3">
+          <div className="bubble-user px-4 py-3">
             <p className="text-sm whitespace-pre-wrap">{message.content as string}</p>
           </div>
         )}
 
+        {/* AI text bubble */}
         {!isUser && hasText && (
-          <div className="bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+          <div className="bubble-ai px-4 py-3">
             <div className="prose-chat text-sm">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -85,7 +78,7 @@ export default function ChatMessage({ message }: { message: Message }) {
                     const isBlock = match || String(children).includes("\n");
                     if (isBlock) {
                       return (
-                        <div className="relative mt-2 mb-2 rounded-lg overflow-hidden border border-gray-200">
+                        <div className="code-block relative mt-2 mb-2">
                           <CopyButton text={String(children)} />
                           <SyntaxHighlighter
                             style={oneLight}
@@ -99,7 +92,7 @@ export default function ChatMessage({ message }: { message: Message }) {
                       );
                     }
                     return (
-                      <code className="bg-gray-100 text-red-600 px-1 py-0.5 rounded text-xs font-mono" {...props}>
+                      <code className="inline-code px-1 py-0.5 text-xs" {...props}>
                         {children}
                       </code>
                     );
@@ -131,9 +124,7 @@ export default function ChatMessage({ message }: { message: Message }) {
       </div>
 
       {isUser && (
-        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold shrink-0 mt-0.5 ml-2">
-          U
-        </div>
+        <div className="avatar-user w-7 h-7 rounded-full text-xs shrink-0 mt-0.5 ml-2">U</div>
       )}
     </div>
   );

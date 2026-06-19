@@ -8,10 +8,17 @@ import {
   PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
-import { cn } from "@/lib/cn";
 import { useChatContext } from "@/lib/ChatContext";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+// Chart palette — mirrors --chart-1 … --chart-6 in globals.css
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+];
 
 interface Props {
   title: string;
@@ -46,9 +53,9 @@ export default function ChartCard({ title, type, data, xKey, yKey, description }
   }
 
   return (
-    <div className={cn("bg-white border border-gray-200 rounded-2xl p-4 shadow-sm my-3 w-full")}>
-      <h3 className="text-sm font-semibold text-gray-800 mb-1">{title}</h3>
-      <p className="text-xs text-gray-400 mb-3">انقر على أي نقطة للاستفسار عنها</p>
+    <div className="card p-4 w-full">
+      <h3 className="card-title mb-1">{title}</h3>
+      <p className="card-subtitle mb-3">انقر على أي نقطة للاستفسار عنها</p>
 
       <ResponsiveContainer width="100%" height={220}>
         {type === "bar" ? (
@@ -110,7 +117,7 @@ export default function ChartCard({ title, type, data, xKey, yKey, description }
       </ResponsiveContainer>
 
       {description && (
-        <p className="text-xs text-gray-500 mt-2 text-center">{description}</p>
+        <p className="card-subtitle mt-2 text-center">{description}</p>
       )}
     </div>
   );

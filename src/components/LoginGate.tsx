@@ -37,10 +37,10 @@ export default function LoginGate({ onAuth }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm mx-4">
+    <div className="login-bg">
+      <div className="login-card p-8 w-full max-w-sm mx-4">
         <div className="flex flex-col items-center mb-7">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+          <div className="avatar-ai w-14 h-14 rounded-2xl mb-4 shadow-lg">
             <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -57,7 +57,7 @@ export default function LoginGate({ onAuth }: Props) {
               placeholder="أدخل كلمة المرور"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+              className="login-input w-full px-4 py-3 pr-10 text-sm"
               autoFocus
               dir="ltr"
             />
@@ -71,13 +71,13 @@ export default function LoginGate({ onAuth }: Props) {
           </div>
 
           {error && (
-            <p className="text-red-500 text-xs text-center bg-red-50 py-2 rounded-lg">{error}</p>
+            <p className="error-bubble text-xs text-center py-2 px-3">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading || !password}
-            className="bg-blue-600 text-white rounded-xl py-3 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
+            className="btn-primary rounded-xl py-3 text-sm font-semibold shadow-sm"
           >
             {loading ? "جارٍ التحقق..." : "دخول"}
           </button>
