@@ -121,7 +121,8 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawMessages = (body.messages as any[]).slice(-40);
 
-  let coreMessages;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let coreMessages: any[];
   try {
     coreMessages = convertToCoreMessages(rawMessages);
   } catch {
@@ -132,6 +133,24 @@ export async function POST(req: NextRequest) {
         content: m.content ?? "",
       }));
   }
+
+  // Strip empty text parts that cause "text content blocks must be non-empty" on Anthropic
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  coreMessages = coreMessages.map((msg: any) => {
+    if (!Array.isArray(msg.content)) return msg;
+    const filtered = msg.content.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (part: any) => !(part.type === "text" && (!part.text || part.text.trim() === ""))
+    );
+    // If all parts were stripped, convert to a plain string content
+    if (filtered.length === 0) return { ...msg, content: msg.role === "assistant" ? "…" : "" };
+    return { ...msg, content: filtered };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }).filter((msg: any) => {
+    // Drop user messages with empty string content (from interactive clicks that were empty)
+    if (msg.role === "user" && typeof msg.content === "string" && msg.content.trim() === "") return false;
+    return true;
+  });
 
   // Connect to MCP via streamable-http
   const mcpClient = new Client({ name: "alhisba-chat", version: "1.0.0" });
