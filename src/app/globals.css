@@ -6,27 +6,38 @@
    DESIGN TOKENS  ←  Edit these to restyle the whole app
    ================================================================ */
 :root {
-  /* --- Brand / primary color --- */
-  --color-primary:        #2563eb;   /* buttons, avatars, links          */
-  --color-primary-hover:  #1d4ed8;   /* hover state                      */
-  --color-primary-light:  #eff6ff;   /* hover backgrounds                */
-  --color-primary-muted:  #dbeafe;   /* badge bg, subtle fills           */
-  --color-primary-text:   #1d4ed8;   /* colored text on light bg         */
-  --color-primary-border: #93c5fd;   /* focus / hover borders            */
-  --color-primary-ring:   #bfdbfe;   /* focus ring glow                  */
+  /* --- Brand / primary color  (AlHisba navy — exact) --- */
+  --color-primary:        #17254A;   /* buttons, avatars, links, card headers */
+  --color-primary-hover:  #223461;   /* hover state                      */
+  --color-primary-light:  #E6F2FE;   /* hover backgrounds (brand light blue) */
+  --color-primary-muted:  #cfe2f7;   /* badge bg, subtle fills           */
+  --color-primary-text:   #17254A;   /* colored text on light bg         */
+  --color-primary-border: #9fb6d4;   /* focus / hover borders            */
+  --color-primary-ring:   #cfe2f7;   /* focus ring glow                  */
 
-  /* --- Surfaces --- */
+  /* --- Brand blue  (AlHisba primary blue — links, info accents) --- */
+  --color-blue:           #078AFB;
+  --color-blue-hover:     #0670cc;
+  --color-blue-light:     #E6F2FE;
+
+  /* --- Brand accent  (AlHisba gold — exact) --- */
+  --color-accent:         #C9A826;   /* send button, key highlights      */
+  --color-accent-hover:   #ab8e1f;   /* accent hover                     */
+  --color-accent-light:   #f7f0d6;   /* gold tint background             */
+  --color-accent-text:    #8f7619;   /* gold text on light bg            */
+
+  /* --- Surfaces  (AlHisba neutrals — exact) --- */
   --color-surface:        #ffffff;
-  --color-surface-muted:  #f9fafb;   /* gray-50  — panel backgrounds     */
-  --color-surface-subtle: #f3f4f6;   /* gray-100 — code bg, table head   */
+  --color-surface-muted:  #FAFAFA;   /* neutral — panel backgrounds      */
+  --color-surface-subtle: #F4F4F4;   /* neutral — code bg, table head    */
 
   /* --- Borders --- */
   --color-border:         #e5e7eb;   /* gray-200 — card borders          */
   --color-border-light:   #f3f4f6;   /* gray-100 — inner dividers        */
 
   /* --- Text --- */
-  --color-text-heading:   #111827;   /* gray-900 — large headings        */
-  --color-text-body:      #1f2937;   /* gray-800 — card titles           */
+  --color-text-heading:   #1A1A1A;   /* near-black — large headings      */
+  --color-text-body:      #17254A;   /* navy — card titles               */
   --color-text-secondary: #374151;   /* gray-700 — body text             */
   --color-text-muted:     #6b7280;   /* gray-500 — labels, captions      */
   --color-text-faint:     #9ca3af;   /* gray-400 — hints, placeholders   */
@@ -48,32 +59,32 @@
   --color-warning-border: #fde68a;   /* amber-200                        */
   --color-warning-text:   #b45309;   /* amber-700                        */
 
-  /* --- Chart palette --- */
-  --chart-1: #3b82f6;   /* blue   */
-  --chart-2: #10b981;   /* green  */
-  --chart-3: #f59e0b;   /* amber  */
-  --chart-4: #ef4444;   /* red    */
-  --chart-5: #8b5cf6;   /* violet */
-  --chart-6: #06b6d4;   /* cyan   */
+  /* --- Chart palette  (brand-led: navy, gold, blue, then supporting hues) --- */
+  --chart-1: #17254A;   /* navy   */
+  --chart-2: #C9A826;   /* gold   */
+  --chart-3: #078AFB;   /* brand blue */
+  --chart-4: #0f6e56;   /* teal   */
+  --chart-5: #993c1d;   /* terracotta */
+  --chart-6: #6a6358;   /* warm gray  */
 
   /* --- Badges --- */
-  --badge-blue-bg:    #dbeafe; --badge-blue-text:    #1d4ed8;
+  --badge-blue-bg:    #E6F2FE; --badge-blue-text:    #0670cc;
   --badge-green-bg:   #dcfce7; --badge-green-text:   #15803d; --badge-green-border: #bbf7d0;
-  --badge-orange-bg:  #ffedd5; --badge-orange-text:  #c2410c;
+  --badge-orange-bg:  #f7f0d6; --badge-orange-text:  #8f7619;
   --badge-purple-bg:  #f3e8ff; --badge-purple-text:  #7e22ce;
-  --badge-gray-bg:    #f3f4f6; --badge-gray-text:    #374151; --badge-gray-border:  #e5e7eb;
+  --badge-gray-bg:    #F4F4F4; --badge-gray-text:    #374151; --badge-gray-border:  #e5e7eb;
 
   /* --- Tool activity panel badges --- */
-  --tool-mcp-bg:      #dbeafe; --tool-mcp-text:    #1d4ed8;
-  --tool-render-bg:   #f3e8ff; --tool-render-text: #7e22ce;
+  --tool-mcp-bg:      #E6F2FE; --tool-mcp-text:    #0670cc;
+  --tool-render-bg:   #f7f0d6; --tool-render-text: #8f7619;
 
   /* --- AI model provider pills --- */
-  --provider-anthropic-bg: #ffedd5; --provider-anthropic-text: #c2410c;
+  --provider-anthropic-bg: #f7f0d6; --provider-anthropic-text: #8f7619;
   --provider-openai-bg:    #d1fae5; --provider-openai-text:    #065f46;
-  --provider-deepseek-bg:  #dbeafe; --provider-deepseek-text:  #1e40af;
+  --provider-deepseek-bg:  #E6F2FE; --provider-deepseek-text:  #0670cc;
   --provider-google-bg:    #fee2e2; --provider-google-text:    #991b1b;
   --provider-groq-bg:      #f3e8ff; --provider-groq-text:      #6b21a8;
-  --provider-xai-bg:       #f3f4f6; --provider-xai-text:       #374151;
+  --provider-xai-bg:       #F4F4F4; --provider-xai-text:       #374151;
   --provider-mistral-bg:   #fef9c3; --provider-mistral-text:   #713f12;
   --provider-zhipu-bg:     #cffafe; --provider-zhipu-text:     #155e75;
 
@@ -88,26 +99,84 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-  /* --- Login page gradient --- */
-  --login-from: #0f172a;         /* slate-900 */
-  --login-via:  #172554;         /* blue-950  */
-  --login-to:   #0f172a;         /* slate-900 */
+  /* --- Login page gradient (AlHisba navy) --- */
+  --login-from: #0f1a33;         /* deep navy */
+  --login-via:  #17254A;         /* brand navy */
+  --login-to:   #0f1a33;         /* deep navy */
 
   /* --- Online indicator --- */
   --color-online: #22c55e;       /* green-500 */
 
   /* --- Typing dots (chat loading) --- */
-  --color-typing-dot: #60a5fa;   /* blue-400  */
+  --color-typing-dot: #C9A826;   /* gold accent */
+
+  /* --- Misc component colors (tokenized, were hardcoded) --- */
+  --color-inline-code:  #8f7619;  /* inline `code` text — gold            */
+  --color-tool-pending: #C9A826;  /* pending tool dot — gold              */
 
   /* --- Scrollbar --- */
   --scrollbar-thumb:       #d1d5db;
   --scrollbar-thumb-hover: #9ca3af;
+
+  /* --- Typography (Avenir Arabic) --- */
+  --font-body:  "Avenir Arabic", "Avenir", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  --font-title: "Avenir Arabic Medium", "Avenir Arabic", "Avenir", system-ui, sans-serif;
 }
 
 /* ================================================================
    BASE
    ================================================================ */
+
+/* Avenir Arabic — regular for body, medium for titles.
+   Place the font files in /public/fonts/ and adjust the paths if needed.
+   .woff2 is preferred; .woff and .ttf are fallbacks. */
+@font-face {
+  font-family: "Avenir Arabic";
+  src: url("/fonts/AvenirArabic-Regular.woff2") format("woff2"),
+       url("/fonts/AvenirArabic-Regular.woff")  format("woff"),
+       url("/fonts/AvenirArabic-Regular.ttf")   format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Avenir Arabic Medium";
+  src: url("/fonts/AvenirArabic-Medium.woff2") format("woff2"),
+       url("/fonts/AvenirArabic-Medium.woff")  format("woff"),
+       url("/fonts/AvenirArabic-Medium.ttf")   format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+/* Also register the Medium file under the base family so font-weight:500
+   resolves correctly when used by weight rather than by name. */
+@font-face {
+  font-family: "Avenir Arabic";
+  src: url("/fonts/AvenirArabic-Medium.woff2") format("woff2"),
+       url("/fonts/AvenirArabic-Medium.woff")  format("woff"),
+       url("/fonts/AvenirArabic-Medium.ttf")   format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body { height: 100%; }
+
+/* Body text → Avenir Arabic regular */
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+/* Titles & headings → Avenir Arabic medium */
+.card-title,
+.stat-value,
+.comparison-highlight,
+.login-title,
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+  font-weight: 500;
+}
 
 ::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -129,7 +198,7 @@ html, body { height: 100%; }
 .prose-chat td   { border: 1px solid var(--color-border); padding: 0.25rem 0.5rem; }
 .prose-chat tr:nth-child(even) td { background: var(--color-surface-muted); }
 .prose-chat blockquote { border-left: 4px solid var(--color-primary-ring); color: var(--color-text-muted); padding-left: 0.75rem; font-style: italic; margin-top: 0.5rem; margin-bottom: 0.5rem; }
-.prose-chat a    { color: var(--color-primary); @apply underline; }
+.prose-chat a    { color: var(--color-blue); @apply underline; }
 .prose-chat strong { @apply font-semibold; }
 .prose-chat code { @apply font-mono; }
 
@@ -148,13 +217,24 @@ html, body { height: 100%; }
 
 .card-header {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-primary);
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .card-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* Optional secondary label in the header (e.g. an English caption) — gold */
+.card-title-accent {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-accent);
 }
 
 .card-subtitle {
@@ -230,14 +310,14 @@ html, body { height: 100%; }
 .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Round icon button (send message) */
+/* Round icon button (send message) — gold accent for emphasis */
 .btn-send {
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-primary);
   border-radius: var(--radius-pill);
   transition: background-color 0.15s;
 }
-.btn-send:hover:not(:disabled) { background: var(--color-primary-hover); }
+.btn-send:hover:not(:disabled) { background: var(--color-accent-hover); }
 .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Ghost (logout, expand/collapse) */
@@ -303,18 +383,22 @@ html, body { height: 100%; }
   justify-content: center;
 }
 
-/* Chat message bubbles */
+/* Chat message bubbles
+   Uses logical radii so the "tail" corner flips automatically in RTL (Arabic).
+   AI bubble: flat corner on the side it originates from; user bubble mirrors it. */
 .bubble-ai {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 1rem 1rem 1rem 0.125rem;
+  border-radius: 1rem;
+  border-end-start-radius: 0.125rem;
   color: var(--color-text-body);
   box-shadow: var(--shadow-sm);
 }
 .bubble-user {
   background: var(--color-primary);
   color: white;
-  border-radius: 1rem 1rem 0.125rem 1rem;
+  border-radius: 1rem;
+  border-end-end-radius: 0.125rem;
 }
 
 /* Typing indicator dots */
@@ -390,7 +474,7 @@ html, body { height: 100%; }
 
 .inline-code {
   background: var(--color-surface-subtle);
-  color: #dc2626;
+  color: var(--color-inline-code);
   border-radius: 0.25rem;
   font-family: monospace;
 }
@@ -430,7 +514,7 @@ html, body { height: 100%; }
 
 /* Status dots inside the tool panel */
 .tool-dot-done    { background: var(--color-success-light); border-radius: var(--radius-pill); }
-.tool-dot-pending { background: #facc15;                    border-radius: var(--radius-pill); }
+.tool-dot-pending { background: var(--color-tool-pending);   border-radius: var(--radius-pill); }
 
 /* ================================================================
    STAT GRID
@@ -541,8 +625,8 @@ html, body { height: 100%; }
 }
 .login-input:focus {
   outline: none;
-  border-color: transparent;
-  box-shadow: 0 0 0 2px var(--color-primary);
+  border-color: var(--color-primary-border);
+  box-shadow: 0 0 0 2px var(--color-primary-ring);
 }
 
 /* ================================================================
